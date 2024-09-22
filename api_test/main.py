@@ -122,26 +122,40 @@ async def submit(request: Request):
                 return response_err(f'GUID in wrong format: {request_guid}', 12, request_guid, response_date, request_method)
 
             if request_method == 'RBANK_GET_PAY_SPLIT':
+                # Проверка структуры 1
                 try:
                     request_params = xml_dict['REQ']['PARAMS']
                 except:
                     return response_err(f'Empty PARAMS in METHOD RBANK_GET_PAY_SPLIT', 13, request_guid, response_date,
                                         request_method)
+                # Проверка структуры 2
                 try:
                     request_params_pay_items = request_params['PAYLIST']['PAY']
                     request_params_pay_items_len = len(request_params_pay_items)
                 except:
                     return response_err(f'Empty PARAMS.PAY in METHOD RBANK_GET_PAY_SPLIT', 13, request_guid, response_date,
                                         request_method)
+                # Проверка на количество элементов PAY
                 if request_params_pay_items_len < 1:
                     return response_err(f'Empty PARAMS.PAY.items in METHOD RBANK_GET_PAY_SPLIT', 13, request_guid,
                                         response_date,
                                        request_method)
 
-                if not list(request_params['PAYLIST']['PAY'][0].keys()) == ['@id', '@sum', '@tra']:
-                    return response_err(f'Empty PARAMS.PAY.items in METHOD RBANK_GET_PAY_SPLIT not in ', 13, request_guid,
+                # Проверка на состав элементов PAY
+                if not sorted(list(request_params_pay_items[0].keys())) == sorted(['@id', '@sum', '@tra']):
+                    return response_err(f'Empty PARAMS.PAY.items in METHOD RBANK_GET_PAY_SPLIT not in id,sum,tra', 13, request_guid,
                                         response_date,
                                         request_method)
+
+                # Проверка на типы данных элементов PAY
+
+            # Запишем запрос в посгре
+
+            # Запросим данные из посгре
+
+            # Посчитаем распределение
+
+            # Запишем ответ в посгре
 
             # Подготовим ответ
             response_xml_dict = copy.deepcopy(return_xml_dict)
