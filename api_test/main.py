@@ -86,7 +86,7 @@ async def http_exception_handler(request, exc):
 # async def validation_exception_handler(request, exc):
 #     return PlainTextResponse(str(exc), status_code=400)
 
-@app.post("/api")
+@app.post("/")
 async def submit(request: Request):
     content_type = request.headers['Content-Type']
     if content_type == 'application/xml':
