@@ -1,12 +1,24 @@
 from fastapi import FastAPI, Response, Request, HTTPException
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import PlainTextResponse
+#from fastapi.exceptions import RequestValidationError
+#from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 import datetime
 import xmltodict
 import copy
 from uuid import UUID
-from xml.parsers.expat import ExpatError
+#from xml.parsers.expat import ExpatError
+from os import environ
+
+
+
+# DB_USER = environ.get("DB_USER", "user")
+# DB_PASSWORD = environ.get("DB_PASSWORD", "password")
+# DB_HOST = environ.get("DB_HOST", "localhost")
+# DB_NAME = "async-blogs"
+# SQLALCHEMY_DATABASE_URL = (
+#     f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}"
+# )
+
 
 app = FastAPI()
 
@@ -31,7 +43,6 @@ app = FastAPI()
 1	Успешно	
 2	Обрабатывается	Запрос с данным GUID находится в процессе обработки
 10	Неизвестная ошибка	Любая ошибка, для которой нет отдельного кода
-
 11	Ошибка аутентификации	
 12	Некорректный запрос	Некорректно сформированный запрос, либо передан некорректный набор параметров для заданного метода.
 13	Неизвестный метод	При запросе, в теге <METHOD>,  передано несуществующее название метода.
@@ -80,7 +91,7 @@ def response_err(error_text=None, code=None, guid=None, date=None, method=None):
 
 @app.exception_handler(StarletteHTTPException)  # В случае вызова других методов помимо POST мы вернем ответ в виде XML
 async def http_exception_handler(request, exc):
-    return response_err(f'status_code:{exc.status_code} detail:{exc.detail}')
+    return response_err(f'Privet status_code:{exc.status_code} detail:{exc.detail}')
 
 # @app.exception_handler(RequestValidationError)
 # async def validation_exception_handler(request, exc):
@@ -108,8 +119,6 @@ async def submit(request: Request):
             else:
                 response_date_offset = "".join(list(response_date_offset).insert(3, ':'))
             response_date = datetime.datetime.now().strftime(f"%Y-%m-%dT%H:%M:%S{response_date_offset}")
-
-
 
             # Если в запросе методы, которые, мы не обрабатываем, мы пришлем ответ с ошибкой об этом
             if request_method not in {'RBANK_GET_PAY_SPLIT','RBANK_SET_PAY_LIST'}:
@@ -149,20 +158,49 @@ async def submit(request: Request):
 
                 # Проверка на типы данных элементов PAY
 
-            # Запишем запрос в посгре
+                # Запишем запрос в посгре
 
-            # Запросим данные из посгре
+                # Запросим данные из посгре
 
-            # Посчитаем распределение
+                # Посчитаем распределение
 
-            # Запишем ответ в посгре
+                # Запишем ответ в посгре
 
-            # Подготовим ответ
-            response_xml_dict = copy.deepcopy(return_xml_dict)
-            response_xml_dict['RSP']['CODE'] = 1
-            response_xml_dict['RSP']['GUID'] = str(response_guid)
-            response_xml_dict['RSP']['DATE'] = response_date
-            response_xml_dict['RSP']['METHOD'] = request_method
+                # Подготовим ответ
+                response_xml_dict = copy.deepcopy(return_xml_dict)
+                response_xml_dict['RSP']['CODE'] = 1
+                response_xml_dict['RSP']['GUID'] = str(response_guid)
+                response_xml_dict['RSP']['DATE'] = response_date
+                response_xml_dict['RSP']['METHOD'] = request_method
+
+
+            elif request_method =='RBANK_SET_PAY_LIST':
+                # За один запрос в метод передаётся не более 1000 идентификаторов платежей.
+
+                """ Пример успешного ответа от сервиса:
+                <RSP>
+                  <GUID>0b9fccc5-dadb-4f4a-9be4-85728e8c60d7</GUID>
+                  <DATE>2019-06-07T08:17:06+03:00</DATE>
+                  <METHOD>RBANK_SET_PAY_LIST</METHOD>
+                  <CODE>14</CODE>
+                  <STATUS>Ошибка метода</STATUS>
+                  <RESULT>
+                    <PAYS>
+                      <PAY id="1041156" bid="31017474"/>
+                      <PAY id="1041157" bid="31017475"/>
+                      <PAY id="1041158" bid="31017476"/>
+                      <PAY id="1041160" bid="31017478" err="Оплата уже существует" />
+                    </PAYS>
+                  </RESULT>
+                </RSP>
+                """
+                response_xml_dict = copy.deepcopy(return_xml_dict)
+                response_xml_dict['RSP']['CODE'] = 1
+                response_xml_dict['RSP']['GUID'] = str(response_guid)
+                response_xml_dict['RSP']['DATE'] = response_date
+                response_xml_dict['RSP']['METHOD'] = request_method
+
+
 
         except Exception as e:
             return response_err(str(e))
